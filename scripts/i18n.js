@@ -51,28 +51,23 @@ export const STRINGS = {
     copied: "Скопировано",
     copyFailed: "Не удалось скопировать",
     copyLink: "Скопировать ссылку с раундом",
-    loadExample: "Загрузить пример",
     downloadScript: "Скачать legit-check.js",
     downloadScriptBtn: "Скачать",
     tonLabel: "TON",
     scriptTitle: "Исходный код проверки",
     scriptHint:
       "Это тот же файл, который реально выполняется при нажатии кнопки. Без сборщика, без сжатия кода, без загрузок с интернета.",
-    scriptRepoLink: "Репозиторий на GitHub",
+    repositoryLink: "Ссылка на репозиторий",
     computedTitle: "Что получилось при пересчёте",
     computedCommit: "Шаг 1: SHA-256( текст UTF-8 + байты соли ) = commit",
     computedMask: "Шаг 2: SHA-256( commit ) = client_commit",
     computedPosition:
       "Шаг 3: первые 8 байт commit как число, по модулю 100 000 = позиция",
-    emptyState:
-      "В ссылке нет данных раунда. Вставьте поля вручную или нажмите «Загрузить пример».",
     footerNote:
       "После первой загрузки страница работает без интернета. Нужен современный браузер и crypto.subtle (SHA-256).",
     scriptLoading: "// Загрузка…",
     scriptLoadFailed:
       "// Не удалось показать файл legit-check.js.\n// Кнопка «Проверить» всё равно работает — не подгрузился только предпросмотр кода.\n",
-    exampleLoaded: "Пример загружен",
-    exampleLoadFailed: "Не удалось загрузить пример",
     nothingToShare: "Пока нечем делиться — сначала загрузите раунд",
     shareLinkCopied: "Ссылка скопирована",
     initFailed: "Ошибка при запуске страницы",

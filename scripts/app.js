@@ -370,25 +370,6 @@ async function loadScriptSource() {
   }
 }
 
-async function loadExampleAndApply() {
-  try {
-    const res = await fetch("./fixtures/example.json", { cache: "no-cache" })
-    const round = await res.json()
-    window.__legitCheckRound = round
-    populateFields(round)
-    const winning = findWinningParty(round.parties, round.roulette_position)
-    renderSummary(round, winning)
-    renderParticipants(round, winning?.id ?? null)
-    clearResult()
-    history.replaceState(null, "", location.pathname + location.search)
-    location.hash = await encodePayloadToHash(round)
-    toast(t("exampleLoaded"))
-  } catch (e) {
-    console.warn(e)
-    toast(t("exampleLoadFailed"), "err")
-  }
-}
-
 async function copyShareLink() {
   const round = currentRound()
   if (!round) {
@@ -436,7 +417,6 @@ function wireEvents() {
   })
 
   $("btn-check").addEventListener("click", runVerification)
-  $("btn-load-example").addEventListener("click", loadExampleAndApply)
   $("btn-copy-link").addEventListener("click", copyShareLink)
   $("btn-download-script").addEventListener("click", downloadScript)
 
@@ -467,9 +447,6 @@ async function bootstrap() {
     const winning = findWinningParty(round.parties, round.roulette_position)
     renderSummary(round, winning)
     renderParticipants(round, winning?.id ?? null)
-    $("empty-banner").hidden = true
-  } else {
-    $("empty-banner").hidden = false
   }
 }
 

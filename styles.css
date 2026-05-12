@@ -618,21 +618,6 @@ pre.code code.hljs {
   overflow-x: visible;
 }
 
-/* ---------- Empty banner ---------- */
-
-.empty-banner {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: center;
-  text-align: center;
-}
-
-.empty-banner__actions {
-  display: flex;
-  gap: 8px;
-}
-
 /* ---------- Footer ---------- */
 
 .footer {

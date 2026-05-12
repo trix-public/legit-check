@@ -52,18 +52,6 @@
         </ol>
       </section>
 
-      <section class="card empty-banner" id="empty-banner" hidden>
-        <p data-i18n="emptyState"></p>
-        <div class="empty-banner__actions">
-          <button
-            type="button"
-            class="btn btn--ghost"
-            id="btn-load-example"
-            data-i18n="loadExample"
-          ></button>
-        </div>
-      </section>
-
       <section class="summary">
         <div class="summary__row">
           <div class="card summary__cell">
@@ -220,12 +208,6 @@
             id="btn-copy-link"
             data-i18n="copyLink"
           ></button>
-          <button
-            type="button"
-            class="btn btn--ghost"
-            id="btn-load-example-2"
-            data-i18n="loadExample"
-          ></button>
         </div>
       </div>
 
@@ -254,7 +236,7 @@
             href="https://github.com/trix-public/legit-check/blob/main/scripts/legit-check.js"
             target="_blank"
             rel="noopener noreferrer"
-            data-i18n="scriptRepoLink"
+            data-i18n="repositoryLink"
           ></a>
         </p>
         <pre class="code"><code id="script-source"></code></pre>
@@ -270,10 +252,6 @@
     <script type="module" src="./scripts/app.js"></script>
     <script>
       window.addEventListener("DOMContentLoaded", () => {
-        const a = document.getElementById("btn-load-example-2")
-        const b = document.getElementById("btn-load-example")
-        if (a && b) a.addEventListener("click", () => b.click())
-
         const sync = () => {
           const hash = document.getElementById("input-commit").value.trim()
           const seed = document.getElementById("input-salt").value.trim()
