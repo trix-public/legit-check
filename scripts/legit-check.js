@@ -9,7 +9,8 @@
  *  Шаги в коде (A–G):
  *
  *    Шаг A:  salt_bytes     = расшифровать base64(salt)
- *    Шаг B:  preimage_bytes = JSON fairness_preimage в кодировке UTF-8
+ *    Шаг B:  preimage_bytes = UTF-8 строка fairness_preimage (как в API: байты
+ *                         от encoding/json.Marshal в Go, не JSON.stringify в JS)
  *    Шаг C:  склеить        = preimage_bytes ПОТОМ salt_bytes (подряд)
  *    Шаг D:  commit         = SHA-256(склеенные байты) → ровно 32 байта
  *    Шаг E:  сравнить commit с base64(commit_hash) — байт-в-байт
@@ -22,8 +23,8 @@
  * Главная функция проверки.
  *
  * Вход (поля с сервера / из API):
- *   fairness_preimage   — JSON со всеми данными раунда, участвующими в расчёте
- *                         итога; UTF-8 строка байт-в-байт как у сервера
+ *   fairness_preimage   — UTF-8 тело из API: то же, что FairnessCanonicalJSON()
+ *                         (json.Marshal в Go); нельзя заменить пересборкой JSON в JS
  *   salt                — соль в base64
  *   commit_hash         — обещанный SHA-256 в base64 (ровно 32 байта после декода)
  *   client_commit_hash  — необязательно; если есть — второй слой проверки
@@ -64,7 +65,7 @@ export async function verifyPvpRoundFairness(input) {
     return { ok: false, code: FAIL_CODES.INVALID_COMMIT_B64 }
   }
 
-  // UTF-8 JSON-строки preimage + байты соли — ровно как на сервере
+  // UTF-8 fairness_preimage (как отдал бэкенд) + salt — как в Go: append(canonical, salt)
   const preimageUtf8 = new TextEncoder().encode(preimage)
   const combined = new Uint8Array(preimageUtf8.length + saltBytes.length)
   combined.set(preimageUtf8, 0)

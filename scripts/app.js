@@ -14,42 +14,13 @@ import { t } from "./i18n.js"
 const $ = (id) => document.getElementById(id)
 
 /**
- * В поле fairness_preimage JSON показываем с отступами (читабельно).
- * Перед проверкой тот же JSON приводим к однострочному виду JSON.stringify(JSON.parse(…)),
- * как обычно от сервера — так не зависим от пробелов в textarea.
+ * fairness_preimage — UTF-8 строка как в API (байты от json.Marshal в Go).
+ * В поле показываем и в verify передаём то же значение без пересборки JSON в JS.
  */
-
-/** Pretty JSON для отображения; не JSON — строка как есть. */
-function formatJsonPreimageForDisplay(raw) {
-  if (typeof raw !== "string" || !raw.trim()) return raw ?? ""
-  const t = raw.trim()
-  if (!(t.startsWith("{") || t.startsWith("["))) return raw
-  try {
-    return JSON.stringify(JSON.parse(raw), null, 2)
-  } catch {
-    return raw
-  }
-}
-
-/** Перед verify: валидный JSON → каноническая однострочная строка; иначе как в поле. */
-function normalizeFairnessPreimageForVerify(s) {
-  if (typeof s !== "string") return ""
-  const t = s.trim()
-  if (!t || !(t.startsWith("{") || t.startsWith("["))) return s
-  try {
-    return JSON.stringify(JSON.parse(s))
-  } catch {
-    return s
-  }
-}
 
 function setPreimageFieldFromRound(round) {
   const raw = round?.fairness_preimage
-  if (typeof raw !== "string") {
-    $("input-preimage").value = ""
-    return
-  }
-  $("input-preimage").value = formatJsonPreimageForDisplay(raw)
+  $("input-preimage").value = typeof raw === "string" ? raw : ""
 }
 
 /** Подставляет русские строки из i18n в разметку (data-i18n, placeholder, title). */
@@ -400,9 +371,7 @@ async function runVerification(options = {}) {
 
     const round = currentRound() ?? {}
     const input = {
-      fairness_preimage: normalizeFairnessPreimageForVerify(
-        $("input-preimage")?.value ?? "",
-      ),
+      fairness_preimage: $("input-preimage")?.value ?? "",
       salt: $("input-salt")?.value?.trim() ?? "",
       commit_hash: $("input-commit")?.value?.trim() ?? "",
       client_commit_hash: $("input-client-commit")?.value?.trim() ?? "",

@@ -61,7 +61,9 @@ export const STRINGS = {
       "Ниже всё можно менять. Правки не меняют ссылку в адресе — только то, что пересчитает скрипт.",
     preimageLabel: "Раскрытый JSON раунда (fairness_preimage), UTF-8",
     preimagePlaceholder:
-      "Точная JSON-строка, которую хэшировал сервер (все данные, участвующие в расчёте итога)",
+      "Точная UTF-8 строка из API (как в json.Marshal на сервере), байт в байт",
+    copyPreimage: "Копировать",
+    copyPreimageTitle: "Копировать fairness_preimage",
     saltLabel: "Соль (salt), base64",
     commitLabel: "Обещание (commit_hash), base64, 32 байта",
     clientCommitLabel: "Вторая маска (client_commit_hash), base64, 32 байта",

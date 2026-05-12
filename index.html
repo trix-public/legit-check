@@ -119,12 +119,21 @@
         <h2 class="section-title" data-i18n="fieldsTitle"></h2>
         <p class="muted small section-hint" data-i18n="fieldsHint"></p>
 
-        <label class="field">
-          <span class="field__label" data-i18n="preimageLabel"></span>
+        <label class="field field--preimage">
+          <div class="field__label-row">
+            <span class="field__label" data-i18n="preimageLabel"></span>
+            <button
+              type="button"
+              class="btn btn--ghost field__copy-btn"
+              data-copy-target="input-preimage"
+              data-i18n="copyPreimage"
+              data-i18n-title="copyPreimageTitle"
+            ></button>
+          </div>
           <textarea
             id="input-preimage"
             class="field__input mono"
-            rows="6"
+            rows="1"
             spellcheck="false"
             autocomplete="off"
             data-i18n-placeholder="preimagePlaceholder"

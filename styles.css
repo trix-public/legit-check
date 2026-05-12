@@ -454,6 +454,25 @@ body {
   letter-spacing: -0.2px;
 }
 
+.field__label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.field__label-row .field__label {
+  margin: 0;
+}
+
+.field__copy-btn {
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
 .field__input {
   width: 100%;
   padding: 12px 14px;
@@ -484,6 +503,17 @@ textarea.field__input {
   min-height: 120px;
   white-space: pre;
   overflow-x: auto;
+}
+
+/* Одна строка как у input: длинный fairness_preimage — горизонтальный скролл */
+textarea#input-preimage.field__input {
+  min-height: 0;
+  height: calc(1.5em + 24px);
+  max-height: calc(1.5em + 24px);
+  resize: none;
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .field__note {
