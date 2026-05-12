@@ -3,55 +3,131 @@
  *  ПРОВЕРКА ЧЕСТНОСТИ РАУНДА PvP-РУЛЕТКИ
  * ═══════════════════════════════════════════════════════════════════════════
  *
- *  ЗАЧЕМ ЭТО НУЖНО
- *  ---------------
- *  Идея «commit–reveal» (обещание → раскрытие):
+ *  Схема commit → reveal и пояснения для пользователя — на странице и в README;
+ *  здесь только реализация: verifyPvpRoundFairness(), findWinningParty() и вспомогательные функции.
  *
- *    1) ДО финала раунда сервер публикует «обещание» — короткий отпечаток
- *       (commit_hash и client_commit_hash). По ним нельзя узнать исход,
- *       но можно запомнить, что обещание было именно таким.
+ *  Шаги в коде (A–G):
  *
- *    2) ПОСЛЕ раунда сервер выкладывает «раскрытие»: длинный текст
- *       fairness_preimage (обычно JSON со всеми ставками и партиями) и
- *       случайную соль salt (в base64). Любой человек может сам повторить
- *       расчёт и убедиться: из этих данных получается ровно то обещание,
- *       которое было до игры.
- *
- *    3) ПОЗИЦИЯ КОЛЕСА (число от 0 до 99999) выводится из первых байт
- *       commit-а по фиксированной формуле. Если сервер подменил исход
- *       после обещания — совпадения не будет.
- *
- *  ЧТО СЧИТАЕТ ЭТОТ ФАЙЛ (по шагам)
- *  --------------------------------
  *    Шаг A:  salt_bytes     = расшифровать base64(salt)
- *    Шаг B:  preimage_bytes= текст fairness_preimage в кодировке UTF-8
+ *    Шаг B:  preimage_bytes = JSON fairness_preimage в кодировке UTF-8
  *    Шаг C:  склеить        = preimage_bytes ПОТОМ salt_bytes (подряд)
  *    Шаг D:  commit         = SHA-256(склеенные байты) → ровно 32 байта
- *    Шаг E:  сравнить commit с base64(commit_hash) — должны совпасть байт-в-байт
- *    Шаг F:  если указан client_commit_hash — SHA-256(commit) должен совпасть
- *    Шаг G:  если указана roulette_position — вычислить позицию из commit
- *             и сравнить с переданным числом
- *
- *  ПОБЕДИТЕЛЬ ПО СЕКТОРАМ
- *  -----------------------
- *  У каждой партии в раунде есть диапазон sector_from … sector_to (тоже
- *  0…99999). Победитель — та партия, в чей диапазон попала итоговая позиция.
+ *    Шаг E:  сравнить commit с base64(commit_hash) — байт-в-байт
+ *    Шаг F:  если задан client_commit_hash — SHA-256(commit) должен совпасть
+ *    Шаг G:  если задана roulette_position — позиция из commit и сверка
  *
  */
 
-/** Коды ошибок (поле `code` в ответе) совпадают с кодами в API */
-export const FAIL_CODES = Object.freeze({
-  MISSING_PREIMAGE: "missing_preimage",
-  MISSING_SALT: "missing_salt",
-  MISSING_COMMIT: "missing_commit_hash",
-  INVALID_SALT_B64: "invalid_salt_base64",
-  INVALID_COMMIT_B64: "invalid_commit_hash_base64",
-  INVALID_CLIENT_B64: "invalid_client_commit_hash_base64",
-  COMMIT_MISMATCH: "commit_mismatch",
-  MASK_MISMATCH: "mask_mismatch",
-  POSITION_MISMATCH: "position_mismatch",
-  NO_WEB_CRYPTO: "web_crypto_unavailable",
-})
+/**
+ * Главная функция проверки.
+ *
+ * Вход (поля с сервера / из API):
+ *   fairness_preimage   — JSON со всеми данными раунда, участвующими в расчёте
+ *                         итога; UTF-8 строка байт-в-байт как у сервера
+ *   salt                — соль в base64
+ *   commit_hash         — обещанный SHA-256 в base64 (ровно 32 байта после декода)
+ *   client_commit_hash  — необязательно; если есть — второй слой проверки
+ *   roulette_position   — необязательно; если есть — сверяем с формулой из commit
+ *
+ * Выход:
+ *   { ok: true,  computed: { commitHex, commitBase64, …, position } }
+ *   { ok: false, code: "…", computed? }  — code см. FAIL_CODES
+ */
+export async function verifyPvpRoundFairness(input) {
+  // Без Web Crypto (например, не-HTTPS в старых браузерах) считать нельзя
+  if (typeof globalThis.crypto?.subtle?.digest !== "function") {
+    return { ok: false, code: FAIL_CODES.NO_WEB_CRYPTO }
+  }
+
+  const preimage =
+    typeof input?.fairness_preimage === "string" ? input.fairness_preimage : ""
+  if (!preimage.trim()) {
+    return { ok: false, code: FAIL_CODES.MISSING_PREIMAGE }
+  }
+
+  const saltStr = typeof input?.salt === "string" ? input.salt : ""
+  if (!saltStr.trim()) {
+    return { ok: false, code: FAIL_CODES.MISSING_SALT }
+  }
+
+  const commitB64 =
+    typeof input?.commit_hash === "string" ? input.commit_hash : ""
+  if (!commitB64.trim()) {
+    return { ok: false, code: FAIL_CODES.MISSING_COMMIT }
+  }
+
+  const saltBytes = base64ToBytes(saltStr)
+  if (!saltBytes) return { ok: false, code: FAIL_CODES.INVALID_SALT_B64 }
+
+  const expectedCommit = base64ToBytes(commitB64)
+  if (!expectedCommit || expectedCommit.length !== 32) {
+    return { ok: false, code: FAIL_CODES.INVALID_COMMIT_B64 }
+  }
+
+  // UTF-8 JSON-строки preimage + байты соли — ровно как на сервере
+  const preimageUtf8 = new TextEncoder().encode(preimage)
+  const combined = new Uint8Array(preimageUtf8.length + saltBytes.length)
+  combined.set(preimageUtf8, 0)
+  combined.set(saltBytes, preimageUtf8.length)
+
+  let computedCommit
+  try {
+    computedCommit = await sha256(combined)
+  } catch {
+    return { ok: false, code: FAIL_CODES.NO_WEB_CRYPTO }
+  }
+
+  // client_commit = SHA-256(commit); сверяется с полем client_commit_hash
+  const computedMask = await sha256(computedCommit)
+  const computedPos = deriveRoulettePositionFromCommit(computedCommit)
+  const computed = {
+    commitHex: bytesToHex(computedCommit),
+    commitBase64: bytesToBase64(computedCommit),
+    clientCommitHex: bytesToHex(computedMask),
+    clientCommitBase64: bytesToBase64(computedMask),
+    position: computedPos,
+  }
+
+  if (!timingSafeEqual(computedCommit, expectedCommit)) {
+    return { ok: false, code: FAIL_CODES.COMMIT_MISMATCH, computed }
+  }
+
+  const clientB64 =
+    typeof input?.client_commit_hash === "string"
+      ? input.client_commit_hash
+      : ""
+  if (clientB64.trim()) {
+    const expectedMask = base64ToBytes(clientB64)
+    if (!expectedMask || expectedMask.length !== 32) {
+      return { ok: false, code: FAIL_CODES.INVALID_CLIENT_B64, computed }
+    }
+    if (!timingSafeEqual(computedMask, expectedMask)) {
+      return { ok: false, code: FAIL_CODES.MASK_MISMATCH, computed }
+    }
+  }
+
+  const wantedPos = normalizeNumeric(input?.roulette_position)
+  if (wantedPos !== null && computedPos !== wantedPos) {
+    return { ok: false, code: FAIL_CODES.POSITION_MISMATCH, computed }
+  }
+
+  return { ok: true, computed }
+}
+
+/**
+ * Какая партия выиграла при данной позиции колеса (0…99999).
+ * Ищется первая партия, у которой sector_from ≤ позиция ≤ sector_to.
+ */
+export function findWinningParty(parties, position) {
+  if (!Array.isArray(parties) || position == null) return null
+  const p = Number(position)
+  if (!Number.isFinite(p)) return null
+  return (
+    parties.find(
+      (q) => Number(q.sector_from) <= p && p <= Number(q.sector_to),
+    ) ?? null
+  )
+}
 
 /**
  * Декодирует base64 в массив байтов (0…255).
@@ -133,112 +209,16 @@ function normalizeNumeric(value) {
   return null
 }
 
-/**
- * Главная функция проверки.
- *
- * Вход (поля с сервера / из API):
- *   fairness_preimage   — длинный текст (часто JSON), UTF-8, байт-в-байт как у сервера
- *   salt                — соль в base64
- *   commit_hash         — обещанный SHA-256 в base64 (ровно 32 байта после декода)
- *   client_commit_hash  — необязательно; если есть — второй слой проверки
- *   roulette_position   — необязательно; если есть — сверяем с формулой из commit
- *
- * Выход:
- *   { ok: true,  computed: { commitHex, commitBase64, …, position } }
- *   { ok: false, code: "…", computed? }  — code см. FAIL_CODES
- */
-export async function verifyPvpRoundFairness(input) {
-  // Без Web Crypto (например, не-HTTPS в старых браузерах) считать нельзя
-  if (typeof globalThis.crypto?.subtle?.digest !== "function") {
-    return { ok: false, code: FAIL_CODES.NO_WEB_CRYPTO }
-  }
-
-  const preimage =
-    typeof input?.fairness_preimage === "string" ? input.fairness_preimage : ""
-  if (!preimage.trim()) {
-    return { ok: false, code: FAIL_CODES.MISSING_PREIMAGE }
-  }
-
-  const saltStr = typeof input?.salt === "string" ? input.salt : ""
-  if (!saltStr.trim()) {
-    return { ok: false, code: FAIL_CODES.MISSING_SALT }
-  }
-
-  const commitB64 =
-    typeof input?.commit_hash === "string" ? input.commit_hash : ""
-  if (!commitB64.trim()) {
-    return { ok: false, code: FAIL_CODES.MISSING_COMMIT }
-  }
-
-  const saltBytes = base64ToBytes(saltStr)
-  if (!saltBytes) return { ok: false, code: FAIL_CODES.INVALID_SALT_B64 }
-
-  const expectedCommit = base64ToBytes(commitB64)
-  if (!expectedCommit || expectedCommit.length !== 32) {
-    return { ok: false, code: FAIL_CODES.INVALID_COMMIT_B64 }
-  }
-
-  // UTF-8 текста preimage + байты соли — ровно как на сервере
-  const preimageUtf8 = new TextEncoder().encode(preimage)
-  const combined = new Uint8Array(preimageUtf8.length + saltBytes.length)
-  combined.set(preimageUtf8, 0)
-  combined.set(saltBytes, preimageUtf8.length)
-
-  let computedCommit
-  try {
-    computedCommit = await sha256(combined)
-  } catch {
-    return { ok: false, code: FAIL_CODES.NO_WEB_CRYPTO }
-  }
-
-  // client_commit = SHA-256(commit); сверяется с полем client_commit_hash
-  const computedMask = await sha256(computedCommit)
-  const computedPos = deriveRoulettePositionFromCommit(computedCommit)
-  const computed = {
-    commitHex: bytesToHex(computedCommit),
-    commitBase64: bytesToBase64(computedCommit),
-    clientCommitHex: bytesToHex(computedMask),
-    clientCommitBase64: bytesToBase64(computedMask),
-    position: computedPos,
-  }
-
-  if (!timingSafeEqual(computedCommit, expectedCommit)) {
-    return { ok: false, code: FAIL_CODES.COMMIT_MISMATCH, computed }
-  }
-
-  const clientB64 =
-    typeof input?.client_commit_hash === "string"
-      ? input.client_commit_hash
-      : ""
-  if (clientB64.trim()) {
-    const expectedMask = base64ToBytes(clientB64)
-    if (!expectedMask || expectedMask.length !== 32) {
-      return { ok: false, code: FAIL_CODES.INVALID_CLIENT_B64, computed }
-    }
-    if (!timingSafeEqual(computedMask, expectedMask)) {
-      return { ok: false, code: FAIL_CODES.MASK_MISMATCH, computed }
-    }
-  }
-
-  const wantedPos = normalizeNumeric(input?.roulette_position)
-  if (wantedPos !== null && computedPos !== wantedPos) {
-    return { ok: false, code: FAIL_CODES.POSITION_MISMATCH, computed }
-  }
-
-  return { ok: true, computed }
-}
-
-/**
- * Какая партия выиграла при данной позиции колеса (0…99999).
- * Ищется первая партия, у которой sector_from ≤ позиция ≤ sector_to.
- */
-export function findWinningParty(parties, position) {
-  if (!Array.isArray(parties) || position == null) return null
-  const p = Number(position)
-  if (!Number.isFinite(p)) return null
-  return (
-    parties.find(
-      (q) => Number(q.sector_from) <= p && p <= Number(q.sector_to),
-    ) ?? null
-  )
-}
+/** Коды ошибок */
+export const FAIL_CODES = Object.freeze({
+  MISSING_PREIMAGE: "missing_preimage",
+  MISSING_SALT: "missing_salt",
+  MISSING_COMMIT: "missing_commit_hash",
+  INVALID_SALT_B64: "invalid_salt_base64",
+  INVALID_COMMIT_B64: "invalid_commit_hash_base64",
+  INVALID_CLIENT_B64: "invalid_client_commit_hash_base64",
+  COMMIT_MISMATCH: "commit_mismatch",
+  MASK_MISMATCH: "mask_mismatch",
+  POSITION_MISMATCH: "position_mismatch",
+  NO_WEB_CRYPTO: "web_crypto_unavailable",
+})

@@ -84,6 +84,64 @@ body {
   margin-top: 8px;
 }
 
+.guide__more {
+  margin: 10px 0 0 0;
+}
+
+.guide__anchor {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+}
+
+.guide__anchor:hover {
+  text-decoration: underline;
+}
+
+.guide__anchor:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.deep-dive {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scroll-margin-top: 12px;
+}
+
+/* ---------- Подробно: алгоритм и доверие (как в README) ---------- */
+
+.theory,
+.trust {
+  border: 1px solid var(--line);
+}
+
+.theory__p {
+  margin: 0 0 12px 0;
+  line-height: 1.55;
+  letter-spacing: -0.2px;
+}
+
+.theory__p--last {
+  margin-bottom: 0;
+}
+
+.theory__list {
+  margin: 0 0 12px 0;
+  padding-left: 1.25rem;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: -0.2px;
+}
+
+.theory__list li + li {
+  margin-top: 8px;
+}
+
 /* ---------- Hero ---------- */
 
 .hero {
@@ -99,13 +157,6 @@ body {
   font-size: 28px;
   font-weight: 700;
   letter-spacing: -0.6px;
-}
-
-.hero__subtitle {
-  margin: 0;
-  color: var(--muted);
-  font-size: 14px;
-  letter-spacing: -0.3px;
 }
 
 /* ---------- Cards ---------- */
@@ -159,15 +210,18 @@ body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 .summary__row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 8px;
+  min-width: 0;
 }
 
 .summary__cell {
+  min-width: 0;
   min-height: 72px;
   display: flex;
   flex-direction: column;
@@ -175,12 +229,25 @@ body {
   justify-content: center;
   text-align: center;
   gap: 4px;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.summary__cell .small,
+.summary__cell .big {
+  max-width: 100%;
+}
+
+.summary__cell .big {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .summary__winner {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
 }
 
 .winner {
@@ -189,16 +256,24 @@ body {
   gap: 8px;
   flex-wrap: wrap;
   min-height: 22px;
+  min-width: 0;
+  max-width: 100%;
+  justify-content: center;
 }
 
 .winner__name {
   font-weight: 600;
   letter-spacing: -0.3px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .winner__chance {
   color: var(--muted);
   font-size: 13px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-align: center;
 }
 
 .badge {
@@ -573,32 +648,25 @@ textarea.field__input {
 
 /* ---------- Script viewer ---------- */
 
-.script-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
+.script-repo-cta {
+  margin: 0 0 16px;
 }
 
-.script-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.script-repo {
-  margin: 8px 0 14px;
-}
-
-.script-repo__link {
-  font-size: 13px;
-  color: var(--accent);
+a.btn--github {
   text-decoration: none;
-  font-weight: 500;
+  color: #12131a;
+  background: var(--accent);
+  width: 100%;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }
 
-.script-repo__link:hover {
-  text-decoration: underline;
+a.btn--github:hover {
+  background: #c5ff33;
+  color: #12131a;
+}
+
+a.btn--github:active {
+  background: #9ed600;
 }
 
 .code {
@@ -624,14 +692,6 @@ pre.code code.hljs {
   background: transparent;
   padding: 0;
   overflow-x: visible;
-}
-
-/* ---------- Footer ---------- */
-
-.footer {
-  text-align: center;
-  padding: 8px;
-  margin-top: 4px;
 }
 
 /* ---------- Toast ---------- */
@@ -676,13 +736,6 @@ pre.code code.hljs {
 
   .hero__title {
     font-size: 32px;
-  }
-
-  .hero__subtitle {
-    font-size: 15px;
-    max-width: 36rem;
-    margin-left: auto;
-    margin-right: auto;
   }
 }
 
@@ -794,10 +847,6 @@ pre.code code.hljs {
 
   .hero__title {
     font-size: 24px;
-  }
-
-  .summary__row {
-    grid-template-columns: 1fr;
   }
 
   .sticky-cta {

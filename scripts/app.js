@@ -13,6 +13,45 @@ import { t } from "./i18n.js"
 
 const $ = (id) => document.getElementById(id)
 
+/**
+ * Если показываем отформатированный JSON, для проверки хэша нужны байты исходной
+ * строки с сервера — JSON.stringify меняет пробелы и иногда числа.
+ */
+let preimageExactForVerify = null
+let preimageFieldDirty = false
+
+/** Пытается распарсить и вернуть pretty JSON; при ошибке — исходная строка. */
+function formatJsonPreimageForDisplay(raw) {
+  if (typeof raw !== "string" || !raw.trim()) return raw ?? ""
+  const t = raw.trim()
+  if (!(t.startsWith("{") || t.startsWith("["))) return raw
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2)
+  } catch {
+    return raw
+  }
+}
+
+function setPreimageFieldFromRound(round) {
+  preimageFieldDirty = false
+  const raw = round?.fairness_preimage
+  if (typeof raw !== "string") {
+    preimageExactForVerify = null
+    $("input-preimage").value = ""
+    return
+  }
+  const pretty = formatJsonPreimageForDisplay(raw)
+  preimageExactForVerify = pretty !== raw ? raw : null
+  $("input-preimage").value = pretty
+}
+
+function getFairnessPreimageForVerify() {
+  if (preimageExactForVerify != null && !preimageFieldDirty) {
+    return preimageExactForVerify
+  }
+  return $("input-preimage")?.value ?? ""
+}
+
 /** Подставляет русские строки из i18n в разметку (data-i18n, placeholder, title). */
 function applyStaticI18n() {
   document.title = t("pageTitle")
@@ -255,7 +294,7 @@ function renderSummary(round, winningParty) {
 }
 
 function populateFields(round) {
-  $("input-preimage").value = round?.fairness_preimage ?? ""
+  setPreimageFieldFromRound(round)
   $("input-salt").value = round?.salt ?? ""
   $("input-commit").value = round?.commit_hash ?? ""
   $("input-client-commit").value = round?.client_commit_hash ?? ""
@@ -268,7 +307,7 @@ function populateFields(round) {
   resetCheckButtonState()
 }
 
-function resultPanel(result, round) {
+function resultPanel(result, round, { scrollToResult = true } = {}) {
   const panel = $("result-panel")
   const fail = $("result-fail")
   const success = $("result-success")
@@ -300,7 +339,9 @@ function resultPanel(result, round) {
     computedBlock.hidden = true
   }
 
-  panel.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  if (scrollToResult) {
+    panel.scrollIntoView({ behavior: "smooth", block: "nearest" })
+  }
 }
 
 function resetCheckButtonState() {
@@ -347,7 +388,8 @@ function refreshWinnerForPosition() {
   renderParticipants(round, winning?.id ?? null)
 }
 
-async function runVerification() {
+async function runVerification(options = {}) {
+  const { scrollToResult = true } = options
   const btn = $("btn-check")
   if (!btn) return
   const labelEl = $("btn-check-label")
@@ -358,7 +400,7 @@ async function runVerification() {
 
     const round = currentRound() ?? {}
     const input = {
-      fairness_preimage: $("input-preimage")?.value ?? "",
+      fairness_preimage: getFairnessPreimageForVerify(),
       salt: $("input-salt")?.value?.trim() ?? "",
       commit_hash: $("input-commit")?.value?.trim() ?? "",
       client_commit_hash: $("input-client-commit")?.value?.trim() ?? "",
@@ -366,7 +408,7 @@ async function runVerification() {
     }
 
     const result = await verifyPvpRoundFairness(input)
-    resultPanel(result, round)
+    resultPanel(result, round, { scrollToResult })
 
     if (result.ok && result.computed) {
       const winning = findWinningParty(round.parties, result.computed.position)
@@ -409,17 +451,11 @@ async function loadScriptSource() {
   }
 }
 
-function downloadScript() {
-  const a = document.createElement("a")
-  a.href = "./scripts/legit-check.js"
-  a.download = "legit-check.js"
-  document.body.appendChild(a)
-  a.click()
-  a.remove()
-}
-
 function wireEvents() {
-  $("input-preimage").addEventListener("input", clearResult)
+  $("input-preimage").addEventListener("input", () => {
+    preimageFieldDirty = true
+    clearResult()
+  })
   $("input-salt").addEventListener("input", () => {
     updateBytesNote("input-salt", "note-salt", null)
     clearResult()
@@ -438,7 +474,14 @@ function wireEvents() {
   })
 
   $("btn-check").addEventListener("click", runVerification)
-  $("btn-download-script").addEventListener("click", downloadScript)
+
+  const deepDiveLink = $("guide-deep-dive-link")
+  if (deepDiveLink) {
+    deepDiveLink.addEventListener("click", (e) => {
+      e.preventDefault()
+      $("deep-dive")?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }
 
   for (const el of document.querySelectorAll("[data-copy-target]")) {
     el.addEventListener("click", () => {
@@ -448,11 +491,6 @@ function wireEvents() {
       copyText(val)
     })
   }
-
-  $("btn-copy-script").addEventListener("click", () => {
-    const codeEl = $("script-source")
-    copyText(codeEl?.textContent ?? "")
-  })
 }
 
 async function bootstrap() {
@@ -467,6 +505,7 @@ async function bootstrap() {
     const winning = findWinningParty(round.parties, round.roulette_position)
     renderSummary(round, winning)
     renderParticipants(round, winning?.id ?? null)
+    await runVerification({ scrollToResult: false })
   }
 }
 

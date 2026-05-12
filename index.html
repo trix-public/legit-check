@@ -40,7 +40,6 @@
     <main class="page">
       <header class="hero">
         <h1 class="hero__title" data-i18n="heroTitle"></h1>
-        <p class="hero__subtitle" data-i18n="subtitle"></p>
       </header>
 
       <section class="card guide" aria-labelledby="guide-title">
@@ -49,7 +48,16 @@
           <li data-i18n="guideP1"></li>
           <li data-i18n="guideP2"></li>
           <li data-i18n="guideP3"></li>
+          <li data-i18n="guideP4"></li>
         </ol>
+        <p class="guide__more muted small">
+          <a
+            class="guide__anchor"
+            id="guide-deep-dive-link"
+            href="#deep-dive"
+            data-i18n="guideDeepDiveLink"
+          ></a>
+        </p>
       </section>
 
       <section class="summary">
@@ -204,39 +212,44 @@
       </div>
 
       <section class="card card--block">
-        <div class="script-head">
-          <h2 class="section-title" data-i18n="scriptTitle"></h2>
-          <div class="script-actions">
-            <button
-              type="button"
-              class="btn btn--ghost"
-              id="btn-copy-script"
-              data-i18n="copy"
-            ></button>
-            <button
-              type="button"
-              class="btn btn--ghost"
-              id="btn-download-script"
-              data-i18n="downloadScriptBtn"
-            ></button>
-          </div>
-        </div>
+        <h2 class="section-title" data-i18n="scriptTitle"></h2>
         <p class="muted small section-hint" data-i18n="scriptHint"></p>
-        <p class="script-repo">
+        <div class="script-repo-cta">
           <a
-            class="script-repo__link"
-            href="https://github.com/trix-public/legit-check/blob/main/scripts/legit-check.js"
+            class="btn btn--github"
+            href="https://github.com/trix-public/legit-check"
             target="_blank"
             rel="noopener noreferrer"
-            data-i18n="repositoryLink"
-          ></a>
-        </p>
+          >
+            <span data-i18n="repositoryBtn"></span>
+          </a>
+        </div>
         <pre class="code"><code id="script-source"></code></pre>
       </section>
 
-      <footer class="footer">
-        <span class="muted small" data-i18n="footerNote"></span>
-      </footer>
+      <div id="deep-dive" class="deep-dive">
+        <section class="card theory" aria-labelledby="theory-title">
+          <h2 class="section-title" id="theory-title" data-i18n="algorithmTitle"></h2>
+          <p class="muted small theory__p" data-i18n="algorithmLead"></p>
+          <p class="muted small theory__p" data-i18n="algorithmP1"></p>
+          <p class="muted small theory__p" data-i18n="algorithmP2"></p>
+          <ol class="theory__list">
+            <li data-i18n="algorithmStep1"></li>
+            <li data-i18n="algorithmStep2"></li>
+            <li data-i18n="algorithmStep3"></li>
+            <li data-i18n="algorithmStep4"></li>
+          </ol>
+          <p class="muted small theory__p theory__p--last" data-i18n="algorithmSummary"></p>
+        </section>
+
+        <section class="card trust" aria-labelledby="trust-title">
+          <h2 class="section-title" id="trust-title" data-i18n="trustTitle"></h2>
+          <p class="muted small theory__p" data-i18n="trustP1"></p>
+          <p class="muted small theory__p" data-i18n="trustP2"></p>
+          <p class="muted small theory__p" data-i18n="trustP3"></p>
+          <p class="muted small theory__p theory__p--last" data-i18n="trustP4"></p>
+        </section>
+      </div>
     </main>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
