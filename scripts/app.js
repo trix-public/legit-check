@@ -14,13 +14,12 @@ import { t } from "./i18n.js"
 const $ = (id) => document.getElementById(id)
 
 /**
- * Если показываем отформатированный JSON, для проверки хэша нужны байты исходной
- * строки с сервера — JSON.stringify меняет пробелы и иногда числа.
+ * В поле fairness_preimage JSON показываем с отступами (читабельно).
+ * Перед проверкой тот же JSON приводим к однострочному виду JSON.stringify(JSON.parse(…)),
+ * как обычно от сервера — так не зависим от пробелов в textarea.
  */
-let preimageExactForVerify = null
-let preimageFieldDirty = false
 
-/** Пытается распарсить и вернуть pretty JSON; при ошибке — исходная строка. */
+/** Pretty JSON для отображения; не JSON — строка как есть. */
 function formatJsonPreimageForDisplay(raw) {
   if (typeof raw !== "string" || !raw.trim()) return raw ?? ""
   const t = raw.trim()
@@ -32,24 +31,25 @@ function formatJsonPreimageForDisplay(raw) {
   }
 }
 
+/** Перед verify: валидный JSON → каноническая однострочная строка; иначе как в поле. */
+function normalizeFairnessPreimageForVerify(s) {
+  if (typeof s !== "string") return ""
+  const t = s.trim()
+  if (!t || !(t.startsWith("{") || t.startsWith("["))) return s
+  try {
+    return JSON.stringify(JSON.parse(s))
+  } catch {
+    return s
+  }
+}
+
 function setPreimageFieldFromRound(round) {
-  preimageFieldDirty = false
   const raw = round?.fairness_preimage
   if (typeof raw !== "string") {
-    preimageExactForVerify = null
     $("input-preimage").value = ""
     return
   }
-  const pretty = formatJsonPreimageForDisplay(raw)
-  preimageExactForVerify = pretty !== raw ? raw : null
-  $("input-preimage").value = pretty
-}
-
-function getFairnessPreimageForVerify() {
-  if (preimageExactForVerify != null && !preimageFieldDirty) {
-    return preimageExactForVerify
-  }
-  return $("input-preimage")?.value ?? ""
+  $("input-preimage").value = formatJsonPreimageForDisplay(raw)
 }
 
 /** Подставляет русские строки из i18n в разметку (data-i18n, placeholder, title). */
@@ -400,7 +400,9 @@ async function runVerification(options = {}) {
 
     const round = currentRound() ?? {}
     const input = {
-      fairness_preimage: getFairnessPreimageForVerify(),
+      fairness_preimage: normalizeFairnessPreimageForVerify(
+        $("input-preimage")?.value ?? "",
+      ),
       salt: $("input-salt")?.value?.trim() ?? "",
       commit_hash: $("input-commit")?.value?.trim() ?? "",
       client_commit_hash: $("input-client-commit")?.value?.trim() ?? "",
@@ -453,7 +455,6 @@ async function loadScriptSource() {
 
 function wireEvents() {
   $("input-preimage").addEventListener("input", () => {
-    preimageFieldDirty = true
     clearResult()
   })
   $("input-salt").addEventListener("input", () => {
