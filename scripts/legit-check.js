@@ -1,6 +1,6 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════
- *  ПРОВЕРКА ЧЕСТНОСТИ РАУНДА PvP-РУЛЕТКИ — что здесь происходит (без жаргона)
+ *  ПРОВЕРКА ЧЕСТНОСТИ РАУНДА PvP-РУЛЕТКИ
  * ═══════════════════════════════════════════════════════════════════════════
  *
  *  ЗАЧЕМ ЭТО НУЖНО
@@ -39,7 +39,7 @@
  *
  */
 
-/** Коды ошибок — те же строки, что в проде */
+/** Коды ошибок (поле `code` в ответе) совпадают с кодами в API */
 export const FAIL_CODES = Object.freeze({
   MISSING_PREIMAGE: "missing_preimage",
   MISSING_SALT: "missing_salt",
@@ -73,7 +73,7 @@ export function base64ToBytes(b64) {
   }
 }
 
-/** Байты → шестнадцатеричная строка (удобно смотреть глазами в интерфейсе). */
+/** Байты → шестнадцатеричная строка. */
 export function bytesToHex(bytes) {
   let s = ""
   for (let i = 0; i < bytes.length; i++) {
@@ -89,7 +89,7 @@ export function bytesToBase64(bytes) {
   return btoa(bin)
 }
 
-/** Сравнение двух массивов байт без «раннего выхода» — чуть безопаснее к таймингам. */
+/** Сравнение двух массивов байт за фиксированное время (снижает риск атак по времени). */
 function timingSafeEqual(a, b) {
   if (a.length !== b.length) return false
   let x = 0
@@ -191,7 +191,7 @@ export async function verifyPvpRoundFairness(input) {
     return { ok: false, code: FAIL_CODES.NO_WEB_CRYPTO }
   }
 
-  // «Маска» — хэш от самого commit (то, что часто показывали до раскрытия)
+  // client_commit = SHA-256(commit); сверяется с полем client_commit_hash
   const computedMask = await sha256(computedCommit)
   const computedPos = deriveRoulettePositionFromCommit(computedCommit)
   const computed = {
