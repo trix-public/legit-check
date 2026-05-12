@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#1B1C21" />
+    <meta name="description" content="" />
+    <title></title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%2319AF2A'/><path d='M22 32l8 8 14-16' fill='none' stroke='white' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/></svg>"
+    />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <h1 class="hero__title" data-i18n="heroTitle"></h1>
+        <p class="hero__subtitle" data-i18n="subtitle"></p>
+      </header>
+
+      <section class="card guide" aria-labelledby="guide-title">
+        <h2 class="section-title" id="guide-title" data-i18n="guideTitle"></h2>
+        <ol class="guide__list">
+          <li data-i18n="guideP1"></li>
+          <li data-i18n="guideP2"></li>
+          <li data-i18n="guideP3"></li>
+        </ol>
+      </section>
+
+      <section class="card empty-banner" id="empty-banner" hidden>
+        <p data-i18n="emptyState"></p>
+        <div class="empty-banner__actions">
+          <button
+            type="button"
+            class="btn btn--ghost"
+            id="btn-load-example"
+            data-i18n="loadExample"
+          ></button>
+        </div>
+      </section>
+
+      <section class="summary">
+        <div class="summary__row">
+          <div class="card summary__cell">
+            <span class="muted small" data-i18n="gameLabel"></span>
+            <span class="big" id="summary-game">—</span>
+          </div>
+          <div class="card summary__cell">
+            <span class="muted small" data-i18n="dateLabel"></span>
+            <span class="big" id="summary-date">—</span>
+          </div>
+        </div>
+        <div class="summary__row">
+          <div class="card summary__cell">
+            <span class="muted small" data-i18n="roomLabel"></span>
+            <span class="big" id="summary-room">—</span>
+          </div>
+          <div class="card summary__cell">
+            <span class="muted small" data-i18n="rouletteLabel"></span>
+            <span class="big" id="summary-position">—</span>
+          </div>
+        </div>
+        <div class="card summary__winner">
+          <span class="muted small" data-i18n="winnerLabel"></span>
+          <div class="winner" id="summary-winner">—</div>
+        </div>
+
+        <button
+          type="button"
+          class="card kv"
+          data-copy-target="input-commit"
+          data-i18n-title="copyHashTitle"
+        >
+          <span class="kv__key"><span data-i18n="hash"></span>:</span>
+          <span class="kv__value mono" id="kv-commit">—</span>
+          <span class="kv__icon" aria-hidden="true">⧉</span>
+        </button>
+        <button
+          type="button"
+          class="card kv"
+          data-copy-target="input-salt"
+          data-i18n-title="copySeedTitle"
+        >
+          <span class="kv__key"><span data-i18n="seedLabel"></span>:</span>
+          <span class="kv__value mono" id="kv-salt">—</span>
+          <span class="kv__icon" aria-hidden="true">⧉</span>
+        </button>
+      </section>
+
+      <section class="card card--block">
+        <h2 class="section-title" data-i18n="participantsTitle"></h2>
+        <div id="participants-list" class="participants">
+          <div class="empty" data-i18n="participantsEmpty"></div>
+        </div>
+      </section>
+
+      <section class="card card--block">
+        <h2 class="section-title" data-i18n="fieldsTitle"></h2>
+        <p class="muted small section-hint" data-i18n="fieldsHint"></p>
+
+        <label class="field">
+          <span class="field__label" data-i18n="preimageLabel"></span>
+          <textarea
+            id="input-preimage"
+            class="field__input mono"
+            rows="6"
+            spellcheck="false"
+            autocomplete="off"
+            data-i18n-placeholder="preimagePlaceholder"
+          ></textarea>
+          <span class="field__note" id="note-preimage"></span>
+        </label>
+
+        <label class="field">
+          <span class="field__label" data-i18n="saltLabel"></span>
+          <input
+            id="input-salt"
+            class="field__input mono"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <span class="field__note" id="note-salt"></span>
+        </label>
+
+        <label class="field">
+          <span class="field__label" data-i18n="commitLabel"></span>
+          <input
+            id="input-commit"
+            class="field__input mono"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <span class="field__note" id="note-commit"></span>
+        </label>
+
+        <label class="field">
+          <span class="field__label" data-i18n="clientCommitLabel"></span>
+          <input
+            id="input-client-commit"
+            class="field__input mono"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <span class="field__note" id="note-client-commit"></span>
+        </label>
+
+        <label class="field">
+          <span class="field__label" data-i18n="positionLabel"></span>
+          <input
+            id="input-position"
+            class="field__input mono"
+            type="text"
+            inputmode="numeric"
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <span class="field__note" id="note-position"></span>
+        </label>
+      </section>
+
+      <section class="result-panel card" id="result-panel" hidden>
+        <p class="result-panel__ok" id="result-success"></p>
+        <p class="result-panel__fail" id="result-fail"></p>
+
+        <div class="computed" id="computed-block" hidden>
+          <h3 class="section-title" data-i18n="computedTitle"></h3>
+          <dl class="computed__list">
+            <div class="computed__row">
+              <dt class="muted small" data-i18n="computedCommit"></dt>
+              <dd class="mono break" id="computed-commit">—</dd>
+            </div>
+            <div class="computed__row">
+              <dt class="muted small" data-i18n="computedMask"></dt>
+              <dd class="mono break" id="computed-mask">—</dd>
+            </div>
+            <div class="computed__row">
+              <dt class="muted small" data-i18n="computedPosition"></dt>
+              <dd class="mono" id="computed-position">—</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <div class="sticky-cta">
+        <button type="button" class="btn btn--primary" id="btn-check">
+          <span id="btn-check-label" data-i18n="checkAction"></span>
+        </button>
+        <div class="sticky-cta__secondary">
+          <button
+            type="button"
+            class="btn btn--ghost"
+            id="btn-copy-link"
+            data-i18n="copyLink"
+          ></button>
+          <button
+            type="button"
+            class="btn btn--ghost"
+            id="btn-load-example-2"
+            data-i18n="loadExample"
+          ></button>
+        </div>
+      </div>
+
+      <section class="card card--block">
+        <div class="script-head">
+          <h2 class="section-title" data-i18n="scriptTitle"></h2>
+          <div class="script-actions">
+            <button
+              type="button"
+              class="btn btn--ghost"
+              id="btn-copy-script"
+              data-i18n="copy"
+            ></button>
+            <button
+              type="button"
+              class="btn btn--ghost"
+              id="btn-download-script"
+              data-i18n="downloadScriptBtn"
+            ></button>
+          </div>
+        </div>
+        <p class="muted small section-hint" data-i18n="scriptHint"></p>
+        <pre class="code"><code id="script-source"></code></pre>
+      </section>
+
+      <footer class="footer">
+        <span class="muted small" data-i18n="footerNote"></span>
+      </footer>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script type="module" src="./scripts/app.js"></script>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const a = document.getElementById("btn-load-example-2")
+        const b = document.getElementById("btn-load-example")
+        if (a && b) a.addEventListener("click", () => b.click())
+
+        const sync = () => {
+          const hash = document.getElementById("input-commit").value.trim()
+          const seed = document.getElementById("input-salt").value.trim()
+          document.getElementById("kv-commit").textContent = hash || "—"
+          document.getElementById("kv-salt").textContent = seed || "—"
+        }
+        for (const id of ["input-commit", "input-salt"]) {
+          const el = document.getElementById(id)
+          if (el) el.addEventListener("input", sync)
+        }
+        setTimeout(sync, 100)
+        setTimeout(sync, 500)
+      })
+    </script>
+  </body>
+</html>
