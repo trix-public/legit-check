@@ -7,6 +7,7 @@ import {
   findWinningParty,
   verifyPvpRoundFairness,
 } from "./legit-check.js"
+import { highlightJavaScript } from "../vendor/highlight-bundle.js"
 import { decodePayloadFromLocation, encodePayloadToHash } from "./url-payload.js"
 import { t } from "./i18n.js"
 
@@ -359,9 +360,11 @@ async function loadScriptSource() {
   try {
     const res = await fetch("./scripts/legit-check.js", { cache: "no-cache" })
     const text = await res.text()
-    codeEl.textContent = text
+    codeEl.className = "hljs language-javascript"
+    codeEl.innerHTML = highlightJavaScript(text)
     codeEl.dataset.source = "remote"
   } catch (e) {
+    codeEl.className = ""
     codeEl.textContent = t("scriptLoadFailed")
     console.warn(e)
   }

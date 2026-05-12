@@ -1,0 +1,18 @@
+{
+  "name": "legit-check",
+  "version": "1.0.0",
+  "description": "Здесь лежит **страница**, которая открывается в браузере и показывает, что итог раунда PvP-рулетки **совпадает с тем, что было заранее «зашито» в хэш** — без доверия к нам на слово: пересчёт идёт **у вас на устройстве**, страница к игровому серверу не обращается.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npx --yes serve . -l 8080",
+    "build:hljs": "esbuild scripts/hljs-bundle-entry.js --bundle --minify --format=esm --platform=neutral --outfile=vendor/highlight-bundle.js && cp node_modules/highlight.js/styles/github-dark.min.css vendor/highlight-github-dark.min.css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild": "^0.28.0",
+    "highlight.js": "^11.11.1"
+  }
+}

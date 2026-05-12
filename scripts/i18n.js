@@ -58,6 +58,7 @@ export const STRINGS = {
     scriptTitle: "Исходный код проверки",
     scriptHint:
       "Это тот же файл, который реально выполняется при нажатии кнопки. Без сборщика, без сжатия кода, без загрузок с интернета.",
+    scriptRepoLink: "Репозиторий на GitHub",
     computedTitle: "Что получилось при пересчёте",
     computedCommit: "Шаг 1: SHA-256( текст UTF-8 + байты соли ) = commit",
     computedMask: "Шаг 2: SHA-256( commit ) = client_commit",

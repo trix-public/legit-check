@@ -23,6 +23,9 @@
   --radius-md: 16px;
   --radius-sm: 12px;
 
+  --page-max: 720px;
+  --page-pad-x: 16px;
+
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans,
@@ -49,9 +52,10 @@ body {
 }
 
 .page {
-  max-width: 720px;
+  width: 100%;
+  max-width: var(--page-max);
   margin: 0 auto;
-  padding: 32px 16px 80px;
+  padding: 32px var(--page-pad-x) 80px;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -574,6 +578,21 @@ textarea.field__input {
   gap: 6px;
 }
 
+.script-repo {
+  margin: 8px 0 14px;
+}
+
+.script-repo__link {
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.script-repo__link:hover {
+  text-decoration: underline;
+}
+
 .code {
   margin: 0;
   background: #0f1014;
@@ -581,16 +600,22 @@ textarea.field__input {
   border-radius: var(--radius-sm);
   padding: 14px 16px;
   overflow: auto;
-  max-height: 460px;
+  max-height: min(460px, 55vh);
 }
 
 .code code {
   font-family: var(--mono);
   font-size: 12px;
   line-height: 1.55;
-  color: #d9dee8;
   white-space: pre;
   display: block;
+}
+
+/* Тема GitHub Dark задаёт padding у pre code — оставляем только подложку pre.code */
+pre.code code.hljs {
+  background: transparent;
+  padding: 0;
+  overflow-x: visible;
 }
 
 /* ---------- Empty banner ---------- */
@@ -649,6 +674,131 @@ textarea.field__input {
 }
 
 /* ---------- Responsive ---------- */
+
+@media (min-width: 768px) {
+  :root {
+    --page-max: 960px;
+    --page-pad-x: 24px;
+  }
+
+  .hero__title {
+    font-size: 32px;
+  }
+
+  .hero__subtitle {
+    font-size: 15px;
+    max-width: 36rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (min-width: 960px) {
+  :root {
+    --page-max: 1140px;
+    --page-pad-x: 28px;
+  }
+
+  .page {
+    gap: 16px;
+  }
+
+  /* Четыре метрики в один ряд */
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .summary__row {
+    display: contents;
+  }
+
+  .summary__winner {
+    grid-column: 1 / -1;
+  }
+
+  .summary .kv {
+    grid-column: 1 / -1;
+  }
+
+  .sticky-cta {
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 18px;
+    width: 100%;
+    max-width: var(--page-max);
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+  }
+
+  .sticky-cta .btn--primary {
+    flex: 1 1 auto;
+    min-width: min(280px, 100%);
+    max-width: 420px;
+  }
+
+  .sticky-cta__secondary {
+    flex: 0 0 auto;
+    justify-content: flex-end;
+  }
+
+  .code {
+    max-height: min(560px, 65vh);
+  }
+
+  .code code {
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --page-max: min(1320px, 100vw - 48px);
+    --page-pad-x: 32px;
+  }
+
+  /* Форма: большое поле на всю ширину, остальные — две колонки */
+  section.card--block:has(#input-preimage) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 24px;
+    row-gap: 0;
+    align-items: start;
+  }
+
+  section.card--block:has(#input-preimage) > .section-title,
+  section.card--block:has(#input-preimage) > .section-hint {
+    grid-column: 1 / -1;
+  }
+
+  section.card--block:has(#input-preimage) > .field:has(#input-preimage) {
+    grid-column: 1 / -1;
+  }
+
+  section.card--block:has(#input-preimage) > .field {
+    margin-bottom: 14px;
+  }
+
+  section.card--block:has(#input-preimage) > .field:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .computed__list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .computed__row {
+    min-height: 100%;
+  }
+}
 
 @media (max-width: 480px) {
   .page {

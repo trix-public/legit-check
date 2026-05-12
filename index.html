@@ -2,6 +2,22 @@
 <html lang="ru">
   <head>
     <meta charset="utf-8" />
+    <script>
+      (function () {
+        var path = location.pathname
+        if (!path.endsWith("/") && history.replaceState) {
+          var segs = path.split("/").filter(Boolean)
+          var last = segs[segs.length - 1] || ""
+          if (last.indexOf(".") === -1) {
+            history.replaceState(
+              null,
+              "",
+              path + "/" + location.search + location.hash,
+            )
+          }
+        }
+      })()
+    </script>
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
@@ -10,6 +26,10 @@
     <meta name="theme-color" content="#1B1C21" />
     <meta name="description" content="" />
     <title></title>
+    <link
+      rel="stylesheet"
+      href="./vendor/highlight-github-dark.min.css"
+    />
     <link rel="stylesheet" href="./styles.css" />
     <link
       rel="icon"
@@ -228,6 +248,15 @@
           </div>
         </div>
         <p class="muted small section-hint" data-i18n="scriptHint"></p>
+        <p class="script-repo">
+          <a
+            class="script-repo__link"
+            href="https://github.com/trix-public/legit-check/blob/main/scripts/legit-check.js"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-i18n="scriptRepoLink"
+          ></a>
+        </p>
         <pre class="code"><code id="script-source"></code></pre>
       </section>
 
