@@ -50,7 +50,6 @@ export const STRINGS = {
     copy: "Копировать",
     copied: "Скопировано",
     copyFailed: "Не удалось скопировать",
-    copyLink: "Скопировать ссылку с раундом",
     downloadScript: "Скачать legit-check.js",
     downloadScriptBtn: "Скачать",
     tonLabel: "TON",
@@ -68,8 +67,6 @@ export const STRINGS = {
     scriptLoading: "// Загрузка…",
     scriptLoadFailed:
       "// Не удалось показать файл legit-check.js.\n// Кнопка «Проверить» всё равно работает — не подгрузился только предпросмотр кода.\n",
-    nothingToShare: "Пока нечем делиться — сначала загрузите раунд",
-    shareLinkCopied: "Ссылка скопирована",
     initFailed: "Ошибка при запуске страницы",
     copyHashTitle: "Копировать хэш",
     copySeedTitle: "Копировать соль",

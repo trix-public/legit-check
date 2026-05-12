@@ -25,6 +25,10 @@
 
   --page-max: 720px;
   --page-pad-x: 16px;
+  /* Нижняя подложка под плавающую кнопку: bottom + padding + кнопка + зазор + safe area */
+  --sticky-cta-scroll-clearance: calc(
+    12px + 14px + 60px + 14px + 20px + env(safe-area-inset-bottom, 0px)
+  );
 
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
@@ -458,6 +462,16 @@ textarea.field__input {
   background: #f0f0f0;
 }
 
+.btn--primary.btn--verified {
+  background: #3c3c4a;
+  color: var(--success);
+}
+
+.btn--primary.btn--verified:hover:not(:disabled) {
+  background: #454550;
+  color: var(--success);
+}
+
 .btn--ghost {
   height: 42px;
   padding: 0 16px;
@@ -489,19 +503,13 @@ textarea.field__input {
   z-index: 5;
 }
 
-.sticky-cta__secondary {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
 /* ---------- Result panel ---------- */
 
 .result-panel {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  scroll-margin-bottom: var(--sticky-cta-scroll-clearance);
 }
 
 .result-panel[data-state="ok"] {
@@ -710,9 +718,8 @@ pre.code code.hljs {
 
   .sticky-cta {
     flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
+    align-items: stretch;
+    justify-content: stretch;
     gap: 12px;
     padding: 12px 18px;
     width: 100%;
@@ -723,14 +730,9 @@ pre.code code.hljs {
   }
 
   .sticky-cta .btn--primary {
-    flex: 1 1 auto;
-    min-width: min(280px, 100%);
-    max-width: 420px;
-  }
-
-  .sticky-cta__secondary {
-    flex: 0 0 auto;
-    justify-content: flex-end;
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: none;
   }
 
   .code {

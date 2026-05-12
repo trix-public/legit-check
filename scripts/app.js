@@ -265,6 +265,7 @@ function populateFields(round) {
   updateBytesNote("input-salt", "note-salt", null)
   updateBytesNote("input-commit", "note-commit", 32)
   updateBytesNote("input-client-commit", "note-client-commit", 32)
+  resetCheckButtonState()
 }
 
 function resultPanel(result, round) {
@@ -298,13 +299,38 @@ function resultPanel(result, round) {
   } else if (computedBlock) {
     computedBlock.hidden = true
   }
+
+  panel.scrollIntoView({ behavior: "smooth", block: "nearest" })
+}
+
+function resetCheckButtonState() {
+  const btn = $("btn-check")
+  const labelEl = $("btn-check-label")
+  if (btn) {
+    btn.dataset.verify = ""
+    btn.classList.remove("btn--verified")
+  }
+  if (labelEl) labelEl.textContent = t("checkAction")
 }
 
 function clearResult() {
+  resetCheckButtonState()
   const panel = $("result-panel")
   if (panel) panel.hidden = true
   const computed = $("computed-block")
   if (computed) computed.hidden = true
+}
+
+function setCheckButtonVerified(round) {
+  const btn = $("btn-check")
+  const labelEl = $("btn-check-label")
+  if (!btn || !labelEl) return
+  btn.dataset.verify = "ok"
+  btn.classList.add("btn--verified")
+  labelEl.textContent =
+    round?.number != null
+      ? t("legitSuccess", { number: round.number })
+      : t("legitSuccessGeneric")
 }
 
 function currentRound() {
@@ -324,34 +350,47 @@ function refreshWinnerForPosition() {
 async function runVerification() {
   const btn = $("btn-check")
   if (!btn) return
-  btn.disabled = true
   const labelEl = $("btn-check-label")
-  const originalLabel = t("checkAction")
-  if (labelEl) labelEl.textContent = t("verifying")
 
-  const round = currentRound() ?? {}
-  const input = {
-    fairness_preimage: $("input-preimage").value,
-    salt: $("input-salt").value.trim(),
-    commit_hash: $("input-commit").value.trim(),
-    client_commit_hash: $("input-client-commit").value.trim(),
-    roulette_position: $("input-position").value.trim() || null,
+  btn.disabled = true
+  try {
+    if (labelEl) labelEl.textContent = t("verifying")
+
+    const round = currentRound() ?? {}
+    const input = {
+      fairness_preimage: $("input-preimage")?.value ?? "",
+      salt: $("input-salt")?.value?.trim() ?? "",
+      commit_hash: $("input-commit")?.value?.trim() ?? "",
+      client_commit_hash: $("input-client-commit")?.value?.trim() ?? "",
+      roulette_position: $("input-position")?.value?.trim() || null,
+    }
+
+    const result = await verifyPvpRoundFairness(input)
+    resultPanel(result, round)
+
+    if (result.ok && result.computed) {
+      const winning = findWinningParty(round.parties, result.computed.position)
+      renderSummary(
+        { ...round, roulette_position: result.computed.position },
+        winning,
+      )
+      renderParticipants(round, winning?.id ?? null)
+    }
+    if (result.ok) {
+      setCheckButtonVerified(round)
+    } else {
+      resetCheckButtonState()
+    }
+  } catch (e) {
+    console.error(e)
+    toast(t("initFailed"), "err")
+    resetCheckButtonState()
+  } finally {
+    btn.disabled = false
+    if (btn.dataset.verify !== "ok" && labelEl) {
+      labelEl.textContent = t("checkAction")
+    }
   }
-
-  const result = await verifyPvpRoundFairness(input)
-  resultPanel(result, round)
-
-  if (result.ok && result.computed) {
-    const winning = findWinningParty(round.parties, result.computed.position)
-    renderSummary(
-      { ...round, roulette_position: result.computed.position },
-      winning,
-    )
-    renderParticipants(round, winning?.id ?? null)
-  }
-
-  btn.disabled = false
-  if (labelEl) labelEl.textContent = originalLabel
 }
 
 async function loadScriptSource() {
@@ -367,24 +406,6 @@ async function loadScriptSource() {
     codeEl.className = ""
     codeEl.textContent = t("scriptLoadFailed")
     console.warn(e)
-  }
-}
-
-async function copyShareLink() {
-  const round = currentRound()
-  if (!round) {
-    toast(t("nothingToShare"), "err")
-    return
-  }
-  try {
-    const hash = await encodePayloadToHash(round)
-    const url =
-      location.origin + location.pathname + location.search + hash
-    await navigator.clipboard.writeText(url)
-    toast(t("shareLinkCopied"))
-  } catch (e) {
-    console.warn(e)
-    toast(t("copyFailed"), "err")
   }
 }
 
@@ -417,7 +438,6 @@ function wireEvents() {
   })
 
   $("btn-check").addEventListener("click", runVerification)
-  $("btn-copy-link").addEventListener("click", copyShareLink)
   $("btn-download-script").addEventListener("click", downloadScript)
 
   for (const el of document.querySelectorAll("[data-copy-target]")) {
