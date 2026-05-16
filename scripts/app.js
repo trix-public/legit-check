@@ -141,6 +141,24 @@ function updateBytesNote(inputId, noteId, expectLen = null) {
   note.dataset.warn = String(expectLen != null && bytes.length !== expectLen)
 }
 
+function sectorsForParty(round, partyId) {
+  if (!partyId || !Array.isArray(round?.parties)) return null
+  const party = round.parties.find((p) => p.id === partyId)
+  if (!party) return null
+  const from = Number(party.sector_from)
+  const to = Number(party.sector_to)
+  if (!Number.isFinite(from) || !Number.isFinite(to)) return null
+  return { from, to }
+}
+
+function attachPartySectors(round, rows) {
+  return rows.map((r) => {
+    const s = sectorsForParty(round, r.partyId)
+    if (!s) return r
+    return { ...r, sectorFrom: s.from, sectorTo: s.to }
+  })
+}
+
 function aggregateBets(round) {
   const tonBets = Array.isArray(round?.bets)
     ? round.bets.filter(
@@ -167,15 +185,18 @@ function aggregateBets(round) {
       }
     }
     const total = [...byUser.values()].reduce((s, v) => s + v.amount, 0)
-    return [...byUser.values()]
-      .map((v) => ({
-        user: v.user,
-        partyId: v.partyId,
-        amountNano: v.amount,
-        lastAt: v.lastAt,
-        pct: total > 0 ? (v.amount / total) * 100 : 0,
-      }))
-      .sort((a, b) => b.amountNano - a.amountNano)
+    return attachPartySectors(
+      round,
+      [...byUser.values()]
+        .map((v) => ({
+          user: v.user,
+          partyId: v.partyId,
+          amountNano: v.amount,
+          lastAt: v.lastAt,
+          pct: total > 0 ? (v.amount / total) * 100 : 0,
+        }))
+        .sort((a, b) => b.amountNano - a.amountNano),
+    )
   }
 
   const flat = Array.isArray(round?.parties)
@@ -185,15 +206,18 @@ function aggregateBets(round) {
     : []
   const total = flat.reduce((s, x) => s + (x.pb.bank ?? 0), 0)
   const roundAt = toMs(round?.created_at) ?? 0
-  return flat
-    .map(({ pb, partyId }) => ({
-      user: pb.user_data ?? {},
-      partyId,
-      amountNano: pb.bank ?? 0,
-      lastAt: roundAt,
-      pct: total > 0 ? ((pb.bank ?? 0) / total) * 100 : 0,
-    }))
-    .sort((a, b) => b.amountNano - a.amountNano)
+  return attachPartySectors(
+    round,
+    flat
+      .map(({ pb, partyId }) => ({
+        user: pb.user_data ?? {},
+        partyId,
+        amountNano: pb.bank ?? 0,
+        lastAt: roundAt,
+        pct: total > 0 ? ((pb.bank ?? 0) / total) * 100 : 0,
+      }))
+      .sort((a, b) => b.amountNano - a.amountNano),
+  )
 }
 
 function renderParticipants(round, winningPartyId) {
@@ -209,6 +233,15 @@ function renderParticipants(round, winningPartyId) {
       const name = r.user.username || shortId(r.user.user_id)
       const photo = r.user.photo_url
       const isWin = winningPartyId != null && r.partyId === winningPartyId
+      const sectorsHtml =
+        r.sectorFrom != null && r.sectorTo != null
+          ? `<span class="row__sectors">${escapeHtml(
+              t("participantsSectors", {
+                from: r.sectorFrom,
+                to: r.sectorTo,
+              }),
+            )}</span>`
+          : ""
       const avatar = photo
         ? `<img class="row__avatar" src="${escapeHtml(photo)}" referrerpolicy="no-referrer" alt="" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'row__avatar row__avatar--fallback',textContent:${JSON.stringify(initials(name))}}))" />`
         : `<div class="row__avatar row__avatar--fallback">${escapeHtml(initials(name))}</div>`
@@ -218,6 +251,7 @@ function renderParticipants(round, winningPartyId) {
             ${avatar}
             <div class="row__meta">
               <span class="row__name">${escapeHtml(name)}</span>
+              ${sectorsHtml}
               <span class="row__when">${escapeHtml(formatDateTime(r.lastAt))}</span>
             </div>
           </div>

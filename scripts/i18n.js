@@ -112,6 +112,7 @@ export const STRINGS = {
     chance: "шанс",
     participantsTitle: "Участники",
     participantsEmpty: "В этом раунде нет ставок.",
+    participantsSectors: "Сектор рулетки: {from}–{to}",
     fieldsTitle: "Данные для проверки",
     fieldsHint:
       "Ниже всё можно менять. Правки не меняют ссылку в адресе — только то, что пересчитает скрипт.",
