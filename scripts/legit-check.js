@@ -9,6 +9,8 @@
  *  Шаги в коде (A–G):
  *
  *    Шаг A:  salt_bytes     = расшифровать base64(salt)
+ *    Шаг A′: salt_hash = maskBytes(salt_bytes) — как Go MaskBytes (sha256.Sum256);
+ *            если в поле задан salt_hash — сверка байт-в-байт с вычисленным
  *    Шаг B:  preimage_bytes = UTF-8 строка fairness_preimage (как в API: байты
  *                         от encoding/json.Marshal в Go, не JSON.stringify в JS)
  *    Шаг C:  склеить        = preimage_bytes ПОТОМ salt_bytes (подряд)
@@ -26,6 +28,7 @@
  *   fairness_preimage   — UTF-8 тело из API: то же, что FairnessCanonicalJSON()
  *                         (json.Marshal в Go); нельзя заменить пересборкой JSON в JS
  *   salt                — соль в base64
+ *   salt_hash           — необязательно; если есть — maskBytes(байты salt) в base64 (32 байта)
  *   commit_hash         — обещанный SHA-256 в base64 (ровно 32 байта после декода)
  *   client_commit_hash  — необязательно; если есть — второй слой проверки
  *   roulette_position   — необязательно; если есть — сверяем с формулой из commit
@@ -60,6 +63,33 @@ export async function verifyPvpRoundFairness(input) {
   const saltBytes = base64ToBytes(saltStr)
   if (!saltBytes) return { ok: false, code: FAIL_CODES.INVALID_SALT_B64 }
 
+  let computedSaltHash
+  try {
+    computedSaltHash = await maskBytes(saltBytes)
+  } catch {
+    return { ok: false, code: FAIL_CODES.NO_WEB_CRYPTO }
+  }
+  const saltHashComputed = {
+    saltHashHex: bytesToHex(computedSaltHash),
+    saltHashBase64: bytesToBase64(computedSaltHash),
+  }
+
+  const saltHashB64 =
+    typeof input?.salt_hash === "string" ? input.salt_hash : ""
+  if (saltHashB64.trim()) {
+    const expectedSaltHash = base64ToBytes(saltHashB64)
+    if (!expectedSaltHash || expectedSaltHash.length !== 32) {
+      return { ok: false, code: FAIL_CODES.INVALID_SALT_HASH_B64 }
+    }
+    if (!timingSafeEqual(computedSaltHash, expectedSaltHash)) {
+      return {
+        ok: false,
+        code: FAIL_CODES.SALT_HASH_MISMATCH,
+        computed: saltHashComputed,
+      }
+    }
+  }
+
   const expectedCommit = base64ToBytes(commitB64)
   if (!expectedCommit || expectedCommit.length !== 32) {
     return { ok: false, code: FAIL_CODES.INVALID_COMMIT_B64 }
@@ -78,10 +108,11 @@ export async function verifyPvpRoundFairness(input) {
     return { ok: false, code: FAIL_CODES.NO_WEB_CRYPTO }
   }
 
-  // client_commit = SHA-256(commit); сверяется с полем client_commit_hash
-  const computedMask = await sha256(computedCommit)
+  // client_commit_hash = maskBytes(commit), как на сервере
+  const computedMask = await maskBytes(computedCommit)
   const computedPos = deriveRoulettePositionFromCommit(computedCommit)
   const computed = {
+    ...saltHashComputed,
     commitHex: bytesToHex(computedCommit),
     commitBase64: bytesToBase64(computedCommit),
     clientCommitHex: bytesToHex(computedMask),
@@ -181,6 +212,21 @@ async function sha256(data) {
 }
 
 /**
+ * Как Go MaskBytes: sha256.Sum256(src)[:].
+ * salt_hash и client_commit_hash на сервере считаются через эту функцию.
+ */
+export async function maskBytes(src) {
+  return sha256(src)
+}
+
+/** maskBytes(base64Decode(salt)) → base64 для поля salt_hash. */
+export async function saltHashB64FromSalt(saltB64) {
+  const bytes = base64ToBytes(saltB64)
+  if (!bytes) return null
+  return bytesToBase64(await maskBytes(bytes))
+}
+
+/**
  * Из 32-байтового commit берётся «лотерейное число» для колеса:
  *   берутся первые 8 байт как БОЛЬШОЕ целое (big-endian), остаток от деления на 100_000.
  * Диапазон результата: 0 … 99999 (сто тысяч дискретных позиций на полный круг).
@@ -216,6 +262,8 @@ export const FAIL_CODES = Object.freeze({
   MISSING_SALT: "missing_salt",
   MISSING_COMMIT: "missing_commit_hash",
   INVALID_SALT_B64: "invalid_salt_base64",
+  INVALID_SALT_HASH_B64: "invalid_salt_hash_base64",
+  SALT_HASH_MISMATCH: "salt_hash_mismatch",
   INVALID_COMMIT_B64: "invalid_commit_hash_base64",
   INVALID_CLIENT_B64: "invalid_client_commit_hash_base64",
   COMMIT_MISMATCH: "commit_mismatch",

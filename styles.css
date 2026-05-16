@@ -115,8 +115,96 @@ body {
 /* ---------- Подробно: алгоритм и доверие (как в README) ---------- */
 
 .theory,
-.trust {
+.trust,
+.faq {
   border: 1px solid var(--line);
+}
+
+/* ---------- FAQ ---------- */
+
+.faq {
+  scroll-margin-top: 12px;
+}
+
+.faq__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.faq__item {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+}
+
+.faq__item[open] {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.faq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.25px;
+  line-height: 1.4;
+  color: var(--text);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.faq__q::-webkit-details-marker {
+  display: none;
+}
+
+.faq__q::after {
+  content: "+";
+  flex-shrink: 0;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.faq__item[open] .faq__q::after {
+  content: "−";
+}
+
+.faq__a {
+  margin: 0;
+  padding: 0 16px 16px;
+  line-height: 1.6;
+  letter-spacing: -0.2px;
+}
+
+.faq__a-lead {
+  margin: 0 0 10px;
+}
+
+.faq__a-foot {
+  margin: 10px 0 0;
+}
+
+.faq__steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+  letter-spacing: -0.2px;
+}
+
+.faq__steps li + li {
+  margin-top: 8px;
+}
+
+.faq__item[open] .faq__a {
+  padding-top: 0;
 }
 
 .theory__p {

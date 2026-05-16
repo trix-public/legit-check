@@ -5,6 +5,7 @@ import {
   FAIL_CODES,
   base64ToBytes,
   findWinningParty,
+  saltHashB64FromSalt,
   verifyPvpRoundFairness,
 } from "./legit-check.js"
 import { highlightJavaScript } from "../vendor/highlight-bundle.js"
@@ -264,14 +265,24 @@ function renderSummary(round, winningParty) {
   )
 }
 
-function populateFields(round) {
+async function populateFields(round) {
   setPreimageFieldFromRound(round)
   $("input-salt").value = round?.salt ?? ""
+  const saltB64 = typeof round?.salt === "string" ? round.salt.trim() : ""
+  if (saltB64) {
+    const fromSalt = await saltHashB64FromSalt(saltB64)
+    const fromRound =
+      typeof round?.salt_hash === "string" ? round.salt_hash.trim() : ""
+    $("input-salt-hash").value = fromRound || fromSalt || ""
+  } else {
+    $("input-salt-hash").value = round?.salt_hash ?? ""
+  }
   $("input-commit").value = round?.commit_hash ?? ""
   $("input-client-commit").value = round?.client_commit_hash ?? ""
   $("input-position").value =
     round?.roulette_position != null ? String(round.roulette_position) : ""
 
+  updateBytesNote("input-salt-hash", "note-salt-hash", 32)
   updateBytesNote("input-salt", "note-salt", null)
   updateBytesNote("input-commit", "note-commit", 32)
   updateBytesNote("input-client-commit", "note-client-commit", 32)
@@ -302,6 +313,13 @@ function resultPanel(result, round, { scrollToResult = true } = {}) {
   const computed = result.computed
   const computedBlock = $("computed-block")
   if (computed && computedBlock) {
+    const saltHashRow = $("computed-row-salt-hash")
+    if (computed.saltHashHex) {
+      setText("computed-salt-hash", computed.saltHashHex)
+      if (saltHashRow) saltHashRow.hidden = false
+    } else if (saltHashRow) {
+      saltHashRow.hidden = true
+    }
     setText("computed-commit", computed.commitHex)
     setText("computed-mask", computed.clientCommitHex)
     setText("computed-position", String(computed.position))
@@ -372,6 +390,7 @@ async function runVerification(options = {}) {
     const round = currentRound() ?? {}
     const input = {
       fairness_preimage: $("input-preimage")?.value ?? "",
+      salt_hash: $("input-salt-hash")?.value?.trim() ?? "",
       salt: $("input-salt")?.value?.trim() ?? "",
       commit_hash: $("input-commit")?.value?.trim() ?? "",
       client_commit_hash: $("input-client-commit")?.value?.trim() ?? "",
@@ -426,6 +445,10 @@ function wireEvents() {
   $("input-preimage").addEventListener("input", () => {
     clearResult()
   })
+  $("input-salt-hash").addEventListener("input", () => {
+    updateBytesNote("input-salt-hash", "note-salt-hash", 32)
+    clearResult()
+  })
   $("input-salt").addEventListener("input", () => {
     updateBytesNote("input-salt", "note-salt", null)
     clearResult()
@@ -445,11 +468,14 @@ function wireEvents() {
 
   $("btn-check").addEventListener("click", runVerification)
 
-  const deepDiveLink = $("guide-deep-dive-link")
-  if (deepDiveLink) {
-    deepDiveLink.addEventListener("click", (e) => {
+  for (const id of ["guide-deep-dive-link", "guide-faq-link"]) {
+    const link = $(id)
+    if (!link) continue
+    link.addEventListener("click", (e) => {
       e.preventDefault()
-      $("deep-dive")?.scrollIntoView({ behavior: "smooth", block: "start" })
+      const target = link.getAttribute("href")?.replace(/^#/, "")
+      const el = target ? document.getElementById(target) : null
+      el?.scrollIntoView({ behavior: "smooth", block: "start" })
     })
   }
 
@@ -471,7 +497,7 @@ async function bootstrap() {
   const round = await decodePayloadFromLocation(location)
   if (round && typeof round === "object") {
     window.__legitCheckRound = round
-    populateFields(round)
+    await populateFields(round)
     const winning = findWinningParty(round.parties, round.roulette_position)
     renderSummary(round, winning)
     renderParticipants(round, winning?.id ?? null)
@@ -488,5 +514,6 @@ window.legitCheck = {
   verifyPvpRoundFairness,
   findWinningParty,
   encodePayloadToHash,
+  saltHashB64FromSalt,
   FAIL_CODES,
 }

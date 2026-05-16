@@ -57,6 +57,8 @@
             href="#deep-dive"
             data-i18n="guideDeepDiveLink"
           ></a>
+          <br />
+          <a class="guide__anchor" id="guide-faq-link" href="#faq" data-i18n="guideFaqLink"></a>
         </p>
       </section>
 
@@ -94,6 +96,16 @@
         >
           <span class="kv__key"><span data-i18n="hash"></span>:</span>
           <span class="kv__value mono" id="kv-commit">—</span>
+          <span class="kv__icon" aria-hidden="true">⧉</span>
+        </button>
+        <button
+          type="button"
+          class="card kv"
+          data-copy-target="input-salt-hash"
+          data-i18n-title="copySaltHashTitle"
+        >
+          <span class="kv__key"><span data-i18n="saltHashShort"></span>:</span>
+          <span class="kv__value mono" id="kv-salt-hash">—</span>
           <span class="kv__icon" aria-hidden="true">⧉</span>
         </button>
         <button
@@ -139,6 +151,18 @@
             data-i18n-placeholder="preimagePlaceholder"
           ></textarea>
           <span class="field__note" id="note-preimage"></span>
+        </label>
+
+        <label class="field">
+          <span class="field__label" data-i18n="saltHashLabel"></span>
+          <input
+            id="input-salt-hash"
+            class="field__input mono"
+            type="text"
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <span class="field__note" id="note-salt-hash"></span>
         </label>
 
         <label class="field">
@@ -198,6 +222,10 @@
         <div class="computed" id="computed-block" hidden>
           <h3 class="section-title" data-i18n="computedTitle"></h3>
           <dl class="computed__list">
+            <div class="computed__row" id="computed-row-salt-hash" hidden>
+              <dt class="muted small" data-i18n="computedSaltHash"></dt>
+              <dd class="mono break" id="computed-salt-hash">—</dd>
+            </div>
             <div class="computed__row">
               <dt class="muted small" data-i18n="computedCommit"></dt>
               <dd class="mono break" id="computed-commit">—</dd>
@@ -242,7 +270,9 @@
           <p class="muted small theory__p" data-i18n="algorithmLead"></p>
           <p class="muted small theory__p" data-i18n="algorithmP1"></p>
           <p class="muted small theory__p" data-i18n="algorithmP2"></p>
+          <p class="muted small theory__p" data-i18n="algorithmSaltHash"></p>
           <ol class="theory__list">
+            <li data-i18n="algorithmStep0"></li>
             <li data-i18n="algorithmStep1"></li>
             <li data-i18n="algorithmStep2"></li>
             <li data-i18n="algorithmStep3"></li>
@@ -258,6 +288,71 @@
           <p class="muted small theory__p" data-i18n="trustP3"></p>
           <p class="muted small theory__p theory__p--last" data-i18n="trustP4"></p>
         </section>
+
+        <section class="card faq" id="faq" aria-labelledby="faq-title">
+          <h2 class="section-title" id="faq-title" data-i18n="faqTitle"></h2>
+          <p class="muted small theory__p theory__p--last" data-i18n="faqLead"></p>
+          <div class="faq__list">
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_json"></summary>
+              <p class="faq__a muted small" data-i18n="faqA_json"></p>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_salt"></summary>
+              <p class="faq__a muted small" data-i18n="faqA_salt"></p>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_salt_hash"></summary>
+              <p class="faq__a muted small" data-i18n="faqA_salt_hash"></p>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_salt_proof"></summary>
+              <p class="faq__a muted small" data-i18n="faqA_salt_proof"></p>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_commit"></summary>
+              <p class="faq__a muted small" data-i18n="faqA_commit"></p>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_client_commit"></summary>
+              <p class="faq__a muted small" data-i18n="faqA_client_commit"></p>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_position"></summary>
+              <p class="faq__a muted small" data-i18n="faqA_position"></p>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_hash"></summary>
+              <p class="faq__a muted small" data-i18n="faqA_hash"></p>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_base64"></summary>
+              <p class="faq__a muted small" data-i18n="faqA_base64"></p>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_utf8"></summary>
+              <p class="faq__a muted small" data-i18n="faqA_utf8"></p>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_commit_reveal"></summary>
+              <p class="faq__a muted small" data-i18n="faqA_commit_reveal"></p>
+            </details>
+            <details class="faq__item">
+              <summary class="faq__q" data-i18n="faqQ_chain"></summary>
+              <div class="faq__a">
+                <p class="muted small faq__a-lead" data-i18n="faqA_chain_lead"></p>
+                <ol class="faq__steps muted small">
+                  <li data-i18n="faqA_chain_1"></li>
+                  <li data-i18n="faqA_chain_2"></li>
+                  <li data-i18n="faqA_chain_3"></li>
+                  <li data-i18n="faqA_chain_4"></li>
+                  <li data-i18n="faqA_chain_5"></li>
+                </ol>
+                <p class="muted small faq__a-foot" data-i18n="faqA_chain_foot"></p>
+              </div>
+            </details>
+          </div>
+        </section>
       </div>
     </main>
 
@@ -268,11 +363,13 @@
       window.addEventListener("DOMContentLoaded", () => {
         const sync = () => {
           const hash = document.getElementById("input-commit").value.trim()
+          const seedHash = document.getElementById("input-salt-hash").value.trim()
           const seed = document.getElementById("input-salt").value.trim()
           document.getElementById("kv-commit").textContent = hash || "—"
+          document.getElementById("kv-salt-hash").textContent = seedHash || "—"
           document.getElementById("kv-salt").textContent = seed || "—"
         }
-        for (const id of ["input-commit", "input-salt"]) {
+        for (const id of ["input-commit", "input-salt-hash", "input-salt"]) {
           const el = document.getElementById(id)
           if (el) el.addEventListener("input", sync)
         }
