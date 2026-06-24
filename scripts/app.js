@@ -10,6 +10,7 @@ import {
 } from "./legit-check.js"
 import { highlightJavaScript } from "../vendor/highlight-bundle.js"
 import { decodePayloadFromLocation, encodePayloadToHash } from "./url-payload.js"
+import { userAggregateKey, userDisplayName } from "./round-display.js"
 import { t } from "./i18n.js"
 
 const $ = (id) => document.getElementById(id)
@@ -167,8 +168,9 @@ function aggregateBets(round) {
     : []
   if (tonBets.length > 0) {
     const byUser = new Map()
-    for (const b of tonBets) {
-      const id = b.user_data?.user_id ?? "?"
+    for (let i = 0; i < tonBets.length; i++) {
+      const b = tonBets[i]
+      const id = userAggregateKey(b.user_data, b.party_id, i)
       const at = toMs(b.created_at) ?? 0
       const cur = byUser.get(id)
       if (!cur) {
@@ -230,7 +232,7 @@ function renderParticipants(round, winningPartyId) {
   }
   list.innerHTML = rows
     .map((r) => {
-      const name = r.user.username || shortId(r.user.user_id)
+      const name = userDisplayName(r.user, shortId)
       const photo = r.user.photo_url
       const isWin = winningPartyId != null && r.partyId === winningPartyId
       const sectorsHtml =
@@ -276,9 +278,7 @@ function renderSummary(round, winningParty) {
       const isSolo = winningParty.type === "SOLO"
       const banks = winningParty.player_banks || []
       const primary = banks[0]?.user_data
-      const name = isSolo
-        ? primary?.username || shortId(primary?.user_id ?? "?")
-        : winningParty.id
+      const name = isSolo ? userDisplayName(primary, shortId) : winningParty.id
       const chance =
         typeof winningParty.win_probability === "number"
           ? `${(winningParty.win_probability * 100).toFixed(1)}% ${t("chance")}`
