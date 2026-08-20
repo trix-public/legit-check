@@ -70,7 +70,7 @@
 |------|------------|
 | `index.html`, `styles.css` | Страница проверки |
 | `scripts/legit-check.js` | Алгоритм: `verifyPvpRoundFairness`, `maskBytes`, `findWinningParty` |
-| `scripts/round-display.js` | Имена участников: `full_name` или fallback `username` / `user_id` |
+| `scripts/round-display.js` | Имена участников: `full_name` или fallback `username` / `user_id` (поле `fairness_version` в ссылке не используется) |
 | `scripts/app.js` | UI, загрузка раунда из URL, кнопка проверки |
 | `scripts/i18n.js` | Все тексты на русском |
 | `scripts/url-payload.js` | Кодирование/декодирование раунда в `#d=…` |

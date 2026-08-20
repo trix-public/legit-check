@@ -161,15 +161,23 @@ function attachPartySectors(round, rows) {
 }
 
 function aggregateBets(round) {
-  const tonBets = Array.isArray(round?.bets)
-    ? round.bets.filter(
-        (b) => b.asset_class === "TON" && typeof b.amount === "number",
-      )
+  const countedBets = Array.isArray(round?.bets)
+    ? round.bets
+        .map((b) =>
+          typeof b.ton_equiv_nano === "number"
+            ? { ...b, amount: b.ton_equiv_nano }
+            : b,
+        )
+        .filter((b) =>
+          typeof b.ton_equiv_nano === "number"
+            ? b.ton_equiv_nano > 0
+            : b.asset_class === "TON" && typeof b.amount === "number",
+        )
     : []
-  if (tonBets.length > 0) {
+  if (countedBets.length > 0) {
     const byUser = new Map()
-    for (let i = 0; i < tonBets.length; i++) {
-      const b = tonBets[i]
+    for (let i = 0; i < countedBets.length; i++) {
+      const b = countedBets[i]
       const id = userAggregateKey(b.user_data, b.party_id, i)
       const at = toMs(b.created_at) ?? 0
       const cur = byUser.get(id)
